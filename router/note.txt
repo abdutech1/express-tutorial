@@ -1,0 +1,126 @@
+## Organizing Routes with express.Router
+
+As your Express.js applications grow, you might find that your main application file (`app.js` ) can become quite long and difficult to manage. This is where `express.Router` comes in handy.
+
+**What is `express.Router`?**
+
+`express.Router` is a class in Express that allows you to create modular, mountable route handlers. Think of it as a mini-application or a self-contained set of routes and middleware. You can define routes specific to a particular resource (like `/api/users` in our case) within a `Router` instance and then "mount" that router onto your main application at a specific path.
+
+**Benefits of Using `express.Router`:**
+
+* **Modularity:** It helps you break down your application's routing logic into smaller, more manageable files or sections.
+* **Organization:** It improves the organization of your code, making it easier to understand and maintain.
+* **Reusability:** You can potentially reuse router instances in different parts of your application.
+* **Middleware Specificity:** You can apply middleware (like `bodyParser.json()`) specifically to a set of routes defined within a router.
+
+**How to Use `express.Router` (with our `/api/users` example):**
+
+Let's refactor our existing `/api/users` routes into a separate router.
+
+**1. Create a `users.js` file (or similar):**
+
+Create a new file in your project directory, for example, `users.js`. This file will contain the routes specifically for the `/api/users` resource.
+
+import express from 'express';
+import bodyParser from 'body-parser';
+
+const router = express.Router();
+
+const users = [
+  { id: 1, name: 'John Doe', city: 'New York', age: 30 },
+  { id: 2, name: 'Abebe Kebede', city: 'Addis Ababa', age: 25 },
+  { id: 3, name: 'Kim Ung', city: 'Seoul', age: 35 },
+  { id: 4, name: 'Jane Smith', city: 'New York', age: 28 },
+  { id: 5, name: 'Tadesse Lemma', city: 'Addis Ababa', age: 40 },
+];
+
+// Middleware specific to this router (optional, but good practice if needed)
+router.use(bodyParser.json());
+
+// GET /api/users (with query parameters)
+router.get('/', (req, res) => {
+  const { maxAge, minAge, sort, city } = req.query;
+  let filteredUsers = [...users];
+
+  if (city) {
+    filteredUsers = filteredUsers.filter(user => user.city.toLowerCase() === city.toLowerCase());
+  }
+
+  if (maxAge) {
+    const max = parseInt(maxAge);
+    if (!isNaN(max)) {
+      filteredUsers = filteredUsers.filter(user => user.age <= max);
+    }
+  }
+  if (minAge) {
+    const min = parseInt(minAge);
+    if (!isNaN(min)) {
+      filteredUsers = filteredUsers.filter(user => user.age >= min);
+    }
+  }
+
+  if (sort === 'name') {
+    filteredUsers = filteredUsers.sort((a, b) => a.name.localeCompare(b.name));
+  } else if (sort === 'age') {
+    filteredUsers = filteredUsers.sort((a, b) => a.age - b.age);
+  }
+  res.status(200).json(filteredUsers);
+});
+
+// GET /api/users/:id
+router.get('/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  const user = users.find(user => user.id === id);
+  if (user) {
+    res.status(200).json(user);
+  } else {
+    res.status(404).send(`There is no user with id: ${id}`);
+  }
+});
+
+// POST /api/users
+router.post('/', (req, res) => {
+  const user = req.body;
+  users.push(user);
+  res.status(201).json(user);
+});
+
+// PUT /api/users/:id
+router.put('/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  const index = users.findIndex(user => user.id === id);
+  if (index !== -1) {
+    const updatedUser = req.body;
+    users[index] = updatedUser;
+    res.status(200).json(updatedUser);
+  } else {
+    res.status(404).send(`There is no user with id: ${id}`);
+  }
+});
+
+// PATCH /api/users/:id
+router.patch('/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  const index = users.findIndex(user => user.id === id);
+  if (index !== -1) {
+    const updatedUser = req.body;
+    users[index] = { ...users[index], ...updatedUser };
+    res.status(200).json(updatedUser);
+  } else {
+    res.status(404).send(`There is no user with id: ${id}`);
+  }
+});
+
+// DELETE /api/users/:id
+router.delete('/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  const index = users.findIndex(user => user.id === id);
+  if (index !== -1) {
+    users.splice(index, 1);
+    res.status(200).send(`User with id ${id} deleted`);
+  } else {
+    res.status(404).send(`There is no user with id: ${id}`);
+  }
+});
+
+export default router;

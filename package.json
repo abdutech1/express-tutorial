@@ -1,0 +1,22 @@
+{
+  "name": "express-tutorial",
+  "version": "1.0.0",
+  "description": "Express is a minimal and flexible Node.js web application framework",
+  "main": "app.js",
+  "type": "module",
+  "scripts": {
+    "start": "nodemon app.js"
+  },
+  "keywords": [
+    "express",
+    "route",
+    "REST",
+    "API",
+    "server"
+  ],
+  "author": "Abdulkadir",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}
